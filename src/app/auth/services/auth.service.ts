@@ -12,12 +12,14 @@ export class AuthService {
 	public readonly baseAPIUrl: string = environment.BACK_SERVER;
 
 	loginUser(
-		username: string,
-		password: string
+		password: string,
+		username: string = '',
+		email: string = ''
 	): Observable<ApiResponse<string>> {
+		const body = username ? { username, password } : { email, password };
 		return this.http.post<ApiResponse<string>>(
 			`${this.baseAPIUrl}/users/login`,
-			{ username, password }
+			body
 		);
 	}
 }

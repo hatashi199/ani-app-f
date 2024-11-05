@@ -1,6 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { AngMaterialModule } from '../../../ang-material/ang-material.module';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import {
 	FormBuilder,
 	FormGroup,
@@ -19,9 +19,10 @@ import { AuthService } from '../../services/auth.service';
 export class LoginPageComponent {
 	private fb = inject(FormBuilder);
 	private authService = inject(AuthService);
+	private router = inject(Router);
 	public passVisibility: boolean = false;
 	public loginForm: FormGroup = this.fb.group({
-		username: ['', Validators.required],
+		usernameOrEmail: ['', Validators.required],
 		password: ['', [Validators.required, Validators.minLength(8)]]
 	});
 
@@ -29,16 +30,25 @@ export class LoginPageComponent {
 		this.passVisibility = !this.passVisibility;
 	}
 
-	login() {
-		console.log(this.loginForm.valid);
+	login(): boolean {
+		if (this.loginForm.invalid) return false;
 
-		if (this.loginForm.invalid) return;
+		const emailRegexp: RegExp =
+			/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+		const usernameOrEmailValue: string =
+			this.loginForm.controls['usernameOrEmail'].value;
+		const passwordValue: string = this.loginForm.controls['password'].value;
+
+		const isEmail = emailRegexp.test(usernameOrEmailValue);
 
 		this.authService
 			.loginUser(
-				this.loginForm.controls['username'].value,
-				this.loginForm.controls['password'].value
+				passwordValue,
+				isEmail ? '' : usernameOrEmailValue,
+				isEmail ? usernameOrEmailValue : ''
 			)
-			.subscribe((data) => console.log(data));
+			.subscribe(() => this.router.navigate(['/anime']));
+
+		return true;
 	}
 }
